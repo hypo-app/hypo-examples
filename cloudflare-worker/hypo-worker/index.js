@@ -128,7 +128,7 @@ async function handleRequest(request) {
       setUserIdCookie = true;
   }
 
-  let experimentId = 'abtest-1';
+  let experimentId = 'hypo-1';
   const experimentCookieName = options.cookiePrefix + "-eid-" + experimentId;
   let groupAssignment = getCookie(request, experimentCookieName);
   let setGroupAssignmentCookie = false;
