@@ -12,7 +12,7 @@ function App() {
             baseUrl: "http://localhost:5000",
             project: "development"
         });
-        hypo.getGroupAssignment("first-test").then(setGroup, setAssignmentError);
+        hypo.getGroupAssignment("test-1").then(setGroup, setAssignmentError);
     }, []);
 
     return (

@@ -19,46 +19,6 @@ function setCookie(response, name, value, hours) {
   response.headers.append('Set-Cookie', newCookie);
 }
 
-// Source - https://stackoverflow.com/a/8809472
-function generateUUID() { // Public Domain/MIT
-  let d = new Date().getTime();//Timestamp
-  let d2 = 0;
-  if (typeof performance !== 'undefined') {
-    d2 = (performance && performance.now && (performance.now() * 1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    let r = Math.random() * 16;//random number between 0 and 16
-    if (d > 0) {//Use timestamp until depleted
-      r = (d + r) % 16 | 0;
-      d = Math.floor(d / 16);
-    } else {//Use microseconds since page-load if supported
-      r = (d2 + r) % 16 | 0;
-      d2 = Math.floor(d2 / 16);
-    }
-    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  });
-}
-
-// Source - https://stackoverflow.com/a/8809472
-function generateUUID() { // Public Domain/MIT
-    let d = new Date().getTime();//Timestamp
-    let d2 = 0;
-    if (typeof performance !== 'undefined') {
-        d2 = (performance && performance.now && (performance.now() * 1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
-    }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        let r = Math.random() * 16;//random number between 0 and 16
-        if (d > 0) {//Use timestamp until depleted
-            r = (d + r) % 16 | 0;
-            d = Math.floor(d / 16);
-        } else {//Use microseconds since page-load if supported
-            r = (d2 + r) % 16 | 0;
-            d2 = Math.floor(d2 / 16);
-        }
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-}
-
 var VERSION = '0.0.1';
 var options = {
     cookiePrefix: "hypo",
@@ -90,9 +50,12 @@ function withTimeout(fetchPromise) {
 
 function getGroupAssignment(userId, experimentId) {
   const url = `${options.baseUrl}/project/${options.project}/experiment/${experimentId}/group/assignment`;
-  const body = JSON.stringify({
-    user: userId
-  });
+  let body = '{}';
+  if (userId) {
+    body = JSON.stringify({
+      user: userId
+    });
+  }
   const headers = {
     'Content-Type': 'application/json',
     'X-Hypo-Client': 'js-cf-worker',
@@ -109,8 +72,6 @@ function getGroupAssignment(userId, experimentId) {
       } else {
         return response.json();
       }
-    }).then((data) => {
-      return data.group;
     })
   );
 }
@@ -122,18 +83,16 @@ function getGroupAssignment(userId, experimentId) {
 async function handleRequest(request) {
   const userIdCookieName = options.cookiePrefix + "-uid";
   let userId = getCookie(request, userIdCookieName);
-  let setUserIdCookie = false;
-  if (!userId) {
-      userId = generateUUID();
-      setUserIdCookie = true;
-  }
+  let setUserIdCookie = !userId;
 
   let experimentId = 'hypo-1';
   const experimentCookieName = options.cookiePrefix + "-eid-" + experimentId;
   let groupAssignment = getCookie(request, experimentCookieName);
   let setGroupAssignmentCookie = false;
   if (!groupAssignment) {
-      groupAssignment = await getGroupAssignment(userId, experimentId);
+      groupAssignmentResp = await getGroupAssignment(userId, experimentId);
+      userId = groupAssignmentResp.user;
+      groupAssignment = groupAssignmentResp.group;
       setGroupAssignmentCookie = true;
   }
   const response = new Response(groupAssignment, {
