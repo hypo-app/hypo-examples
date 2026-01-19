@@ -1,5 +1,5 @@
 {
   "devDependencies": {
-    "@cloudflare/wrangler": "^1.6.0"
+    "@cloudflare/wrangler": "^1.16.0"
   }
 }
